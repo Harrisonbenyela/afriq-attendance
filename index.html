@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFRIQ Batch 2027 STUDENTS' PORTAL</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #6A0DAD; margin: 0; padding: 20px; }
+  .container { max-width: 500px; margin: auto; }
+  .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); margin-bottom: 20px; }
+  .logo-area { text-align: center; margin-bottom: 15px; }
+  .logo-area img { width: 100px; height: 100px; object-fit: contain; border-radius: 50%; background: #eee; }
+  header { text-align: center; margin-bottom: 20px; }
+  header h1 { color: #6A0DAD; margin: 0; }
+  header p { margin: 4px 0 0; color: #333; font-weight: bold; }
+  label { display: block; margin: 12px 0 4px; font-weight: bold; color: #6A0DAD; }
+  input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+  button.main { width: 100%; background: #6A0DAD; color: white; padding: 12px; border: none; border-radius: 8px; margin-top: 15px; font-size: 16px; cursor: pointer; }
+  button.main:hover { background: #580c91; }
+  .admin-link { text-align: center; margin-top: 15px; }
+  .link-btn { background: none; border: none; color: #6A0DAD; text-decoration: underline; font-size: 13px; cursor: pointer; }
+  .small-btn { background: #6A0DAD; color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; margin-top: 8px; cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  th { background: #6A0DAD; color: white; }
+  .table-responsive { overflow-x: auto; max-height: 400px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="formCard" class="card">
+    <div class="logo-area">
+    
+      <img src="Afriq.jpg" alt="AFRIQ Logo" onerror="this.style.display='none'">
+    </div>
+
+    <header>
+      <h1>AFRIQ</h1>
+      <p>Batch 2027 Attendance Portal</p>
+    </header>
+
+    <form id="attendanceForm" onsubmit="event.preventDefault(); submitForm();">
+      <label>Full Name</label>
+      <input id="name" placeholder="e.g. DILAND ACHIDI" required>
+
+      <label>School</label>
+      <input id="school" placeholder="e.g. STEP BY STEP" required>
+
+      <label>Series</label>
+      <select id="series" required>
+        <option value="">SELECT SERIES</option>
+        <optgroup label="Science">
+          <option value="S1">S1</option>
+          <option value="S2">S2</option>
+          <option value="S3">S3</option>
+          <option value="S4">S4</option>
+          <option value="S5">S5</option>
+          <option value="S6">S6</option>
+        </optgroup>
+        <optgroup label="Arts">
+          <option value="A1">A1</option>
+          <option value="A2">A2</option>
+          <option value="A3">A3</option>
+          <option value="A4">A4</option>
+          <option value="A5">A5</option>
+          <option value="A6">A6</option>
+        </optgroup>
+        <optgroup label="Commercial">
+          <option value="Marketing">Marketing</option>
+          <option value="Accounting">Accounting</option>
+        </optgroup>
+        <optgroup label="Technical">
+          <option value="Mechanics">Mechanics</option>
+          <option value="Electricity">Electricity</option>
+          <option value="Building and Construction">Building and Construction</option>
+        </optgroup>
+      </select>
+
+      <label>Contact (Phone/WhatsApp)</label>
+      <input id="contact" placeholder="Enter phone number" required>
+
+      <label>Parents Contact</label>
+      <input id="parentContact" placeholder="Enter parents phone number" required>
+
+      <label>Subjects Offering</label>
+      <input id="subjects" placeholder="e.g. Maths, Physics, Chemistry" required>
+
+      <button class="main" type="submit">Submit Attendance</button>
+    </form>
+
+    <div class="admin-link">
+      <button class="link-btn" onclick="showAdminLogin()">Admin Dashboard</button>
+      <div id="adminPassBox" style="display:none; margin-top:10px;">
+        <input type="password" id="adminPass" placeholder="Enter admin password">
+        <button class="small-btn" onclick="checkAdminPass()">Open Dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminCard" class="card" style="display:none;">
+    <h2 style="color:#6A0DAD; margin-top:0;">Admin Dashboard</h2>
+    <p id="stats"></p>
+    <div class="table-responsive" id="adminTable"></div>
+    <button class="small-btn" onclick="exportCSV()">Export to CSV</button>
+    <button class="small-btn" style="background:#555;" onclick="backToForm()">Back to Form</button>
+  </div>
+
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxMtw5eE7KZc6t3NqbpFPC3dR35hl4ykh4yCi2NfzHo1X057t1px35yvGEe6JTTCr8/exec"; // Replace with your actual deployed script URL
+
+function getData() {
+  return JSON.parse(localStorage.getItem('afriq_students') || '{}');
+}
+function saveData(d) {
+  localStorage.setItem('afriq_students', JSON.stringify(d));
+}
+function makeID() {
+  return 'AFRIQ-' + Math.floor(1000 + Math.random() * 9000);
+}
+function submitForm() {
+  let name = document.getElementById('name').value.trim();
+  let school = document.getElementById('school').value.trim();
+  let series = document.getElementById('series').value.trim();
+  let contact = document.getElementById('contact').value.trim();
+  let parentContact = document.getElementById('parentContact').value.trim();
+  let subjects = document.getElementById('subjects').value.trim();
+  
+  if(!name || !school || !series || !contact || !parentContact || !subjects){
+    alert('Please fill all fields');
+    return;
+  }
+  
+  let data = getData();
+  let key = contact.replace(/\s+/g, '');
+  let today = new Date().toLocaleDateString();
+  
+  if(data[key]){
+    data[key].count += 1;
+    data[key].lastDate = today;
+    data[key].name = name;
+    data[key].school = school;
+    data[key].series = series;
+    data[key].parentContact = parentContact;
+    data[key].subjects = subjects;
+  } else {
+    data[key] = { 
+      id: makeID(), 
+      name: name, 
+      school: school, 
+      series: series, 
+      contact: contact, 
+      parentContact: parentContact, 
+      subjects: subjects, 
+      count: 1, 
+      lastDate: today 
+    };
+  }
+  
+  saveData(data);
+  
+  // Send to Google Sheet Backend (fails silently if offline, but saves locally)
+  if(SCRIPT_URL && SCRIPT_URL !== "https://script.google.com/macros/s/AKfycbxMtw5eE7KZc6t3NqbpFPC3dR35hl4ykh4yCi2NfzHo1X057t1px35yvGEe6JTTCr8/exec") {
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(data[key])
+    }).catch(err => console.log('Cloud sync error:', err));
+  }
+
+  alert('Attendance recorded successfully! Your ID: ' + data[key].id);
+  document.getElementById('attendanceForm').reset();
+}
+
+function showAdminLogin() {
+  document.getElementById('adminPassBox').style.display = 'block';
+}
+
+function checkAdminPass() {
+  let pass = document.getElementById('adminPass').value;
+  if(pass !== 'afriq2027'){
+    alert('Wrong password');
+    return;
+  }
+  document.getElementById('adminPassBox').style.display = 'none';
+  document.getElementById('adminPass').value = '';
+  document.getElementById('formCard').style.display = 'none';
+  document.getElementById('adminCard').style.display = 'block';
+  renderAdmin();
+}
+
+function renderAdmin() {
+  let data = getData();
+  let keys = Object.keys(data);
+  let totalSubs = keys.reduce((sum, k) => sum + data[k].count, 0);
+  
+  document.getElementById('stats').innerHTML = `<b>Total Students:</b> ${keys.length} | <b>Total Check-ins:</b> ${totalSubs}`;
+  
+  let html = '<table><tr><th>ID</th><th>Name</th><th>School</th><th>Series</th><th>Contact</th><th>Parent Contact</th><th>Subjects</th><th>Times</th><th>Last Date</th></tr>';
+  keys.forEach(k => {
+    let s = data[k];
+    html += `<tr><td>${s.id}</td><td>${s.name}</td><td>${s.school}</td><td>${s.series}</td><td>${s.contact}</td><td>${s.parentContact||''}</td><td>${s.subjects||''}</td><td>${s.count}</td><td>${s.lastDate}</td></tr>`;
+  });
+  html += '</table>';
+  document.getElementById('adminTable').innerHTML = html;
+}
+
+function exportCSV() {
+  let data = getData();
+  let csv = 'ID,Name,School,Series,Contact,Parents Contact,Subjects,Times Filled,Last Date\n';
+  Object.keys(data).forEach(k => {
+    let s = data[k];
+    csv += `${s.id},"${s.name}","${s.school}","${s.series}",${s.contact},"${s.parentContact||''}","${s.subjects||''}",${s.count},${s.lastDate}\n`;
+  });
+  let blob = new Blob([csv], { type: 'text/csv' });
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href = url;
+  a.download = 'afriq_batch2027_attendance.csv';
+  a.click();
+}
+
+function backToForm() {
+  document.getElementById('adminCard').style.display = 'none';
+  document.getElementById('formCard').style.display = 'block';
+}
+</script>
+</body>
+</html>
